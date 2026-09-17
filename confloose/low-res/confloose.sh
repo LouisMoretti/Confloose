@@ -3,7 +3,7 @@
 conf="$HOME/.config/i3/config"
 backup="$HOME/.config/i3/config.bak"
 
-touch $conf
+touch "$conf"
 [ -f "$backup" ] || cp "$conf" "$backup"
 
 IFS=$'\n'

@@ -7,6 +7,6 @@ backup="$HOME/.config/i3/config.bak"
 
 IFS=$'\n'
 for output in $(xrandr | sed -nE "s/(^\S+) connected.*$/\1/p"); do
-    xrandr --output "$output" --rotate normal
+    xrandr --output "$output" --transform none --rotate normal
 done
 i3-msg restart

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-trap 'printf "\n$ps1"' INT
+trap 'printf "\n%s" "$ps1"' INT
 
 ps1="$(sed -n "s/^\s*PS1=[\"']*\(.*\)[\"']\s*$/\1/p" "$HOME/.bashrc")"
 if [ -z "$ps1" ]; then
@@ -10,14 +10,17 @@ fi
 if [ "$(pwd)" = "$HOME" ]; then
     here="~";
 else
-    here=$(basename $(pwd))
+    here=$(basename "$(pwd)")
 fi
 
 ps1="$(echo "$ps1" | sed -E "s/[\][$]/$/g")"
 ps1="$(echo "$ps1" | sed -E "s/[\][wW](\W)/$here\1/g")"
 
 while true; do
-    printf "$ps1"
-    read cmd
+    printf '%s' "$ps1"
+    if ! read -r cmd; then
+        echo
+        break
+    fi
     echo "bash: $cmd: command not found"
 done

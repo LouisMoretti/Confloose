@@ -34,10 +34,6 @@ fi
 
 fetch() { curl -fsSL "$1"; }
 
-# Reserved for future confloose that would need root; usually unavailable on the
-# fleet. True only when sudo works without a password (avoids any blocking prompt).
-has_sudo() { command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; }
-
 lock_add() {
     mkdir -p "$CONF_DIR"; touch "$LOCK"
     grep -qxF -- "$1" "$LOCK" 2>/dev/null || printf '%s\n' "$1" >> "$LOCK"
@@ -110,7 +106,7 @@ resolve() {
     local tok idx out=()
     for tok in "$@"; do
         if printf '%s' "$tok" | grep -qE '^[0-9]+$'; then
-            idx=$((tok - 1))
+            idx=$((10#$tok - 1))
             if [ "$idx" -ge 0 ] && [ "$idx" -lt "${#NAMES[@]}" ]; then out+=("${NAMES[$idx]}"); fi
         elif valid_name "$tok"; then
             out+=("$tok")
@@ -128,8 +124,9 @@ menu_loop() {
         printf '%s> %s' "$c_bold" "$c_off"
         local sel n
         IFS= read -r sel < "$TTY" || break
+        # Disable glob expansion: input like "*" must not expand to files.
         # shellcheck disable=SC2086
-        set -- $sel
+        set -f; set -- $sel; set +f
         [ "$#" -eq 0 ] && continue
         case "$1" in
             q|Q) break;;
@@ -143,7 +140,10 @@ menu_loop() {
 main() {
     if [ "$#" -gt 0 ]; then
         case "$1" in
-            -a|--antidote) shift; load_manifest; for n in "$@"; do antidote "$n"; done;;
+            -a|--antidote) shift; load_manifest
+               for n in "$@"; do
+                   if valid_name "$n"; then antidote "$n"; else printf '%sunknown: %s%s\n' "$c_red" "$n" "$c_off" >&2; fi
+               done;;
             -l|--list)     lock_list;;
             -h|--help)     load_manifest; print_menu;;
             *) load_manifest

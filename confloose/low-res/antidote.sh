@@ -7,6 +7,8 @@ backup="$HOME/.config/i3/config.bak"
 
 IFS=$'\n'
 for output in $(xrandr | sed -nE "s/(^\S+) connected.*$/\1/p"); do
-    xrandr --output "$output" --mode 1920x1080
+    # Config restore above handles persistence; --auto avoids hardcoding a
+    # mode that may not exist on this display.
+    xrandr --output "$output" --auto || true
 done
 i3-msg restart
