@@ -1,0 +1,23 @@
+#!/bin/sh
+
+trap 'printf "\n$ps1"' INT
+
+ps1="$(sed -n "s/^\s*PS1=[\"']*\(.*\)[\"']\s*$/\1/p" "$HOME/.bashrc")"
+if [ -z "$ps1" ]; then
+    ps1="\Ww\$ "
+fi
+
+if [ "$(pwd)" = "$HOME" ]; then
+    here="~";
+else
+    here=$(basename $(pwd))
+fi
+
+ps1="$(echo "$ps1" | sed -E "s/[\][$]/$/g")"
+ps1="$(echo "$ps1" | sed -E "s/[\][wW](\W)/$here\1/g")"
+
+while true; do
+    printf "$ps1"
+    read cmd
+    echo "bash: $cmd: command not found"
+done

@@ -1,0 +1,25 @@
+de-keyboard	German keyboard layout (setxkbmap de)
+ru-keyboard	Russian keyboard layout (setxkbmap ru)
+flip-screen	Turn the screen upside down (xrandr)
+rotate-slightly	Tilt the screen almost imperceptibly
+low-res	Force the screen to 640x480
+change-directions	Swap the arrow directions in i3
+change-mod	Shuffle the i3 Mod keys
+no-mod	Break the i3 Mod shortcuts
+no-terminal	Remove the terminal shortcut (i3)
+no-dmenu	Remove the dmenu shortcut (i3)
+tab-i3lock	Tab locks the screen (i3lock)
+cheese	Invert and skew the mouse pointer (xinput)
+ls_parent	ls alias that lists the parent directory
+set-e	Add set -e to the shell (exits on any error)
+sleep	Add a sleep on every shell startup
+editor-kill	Opening an editor closes the terminal
+editor-lock	Opening an editor locks the screen
+xkill	Run xkill on shell startup
+fake-gcc	Fake gcc/cc/clang in PATH
+fake-git	Fake git in PATH
+fake-sh	Fake looping shell (interactive sessions)
+fake-i3lock	Fake i3lock screen locker
+daemon-terminal	Background daemon that randomly opens apps
+i3loop	Background daemon that keeps relaunching i3lock
+alacritty-color	Replace the Alacritty colors
