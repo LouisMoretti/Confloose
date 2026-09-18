@@ -1,7 +1,6 @@
 #!/bin/sh
 
-backup="$HOME/.config/i3/config.bak"
 conf="$HOME/.config/i3/config"
 
-[ -f "$backup" ] && mv "$backup" "$conf"
+[ -f "$conf" ] && sed -i "s/^# \(.*\) # confloose by leo \[no-terminal\]$/\1/" "$conf"
 i3-msg restart

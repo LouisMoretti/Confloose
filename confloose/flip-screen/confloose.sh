@@ -1,13 +1,17 @@
 #!/bin/sh
 
 conf="$HOME/.config/i3/config"
-backup="$HOME/.config/i3/config.bak"
+tag="# confloose by leo [flip-screen]"
 
+mkdir -p "$(dirname "$conf")"
 touch "$conf"
-[ -f "$backup" ] || cp "$conf" "$backup"
 
-IFS=$'\n'
+# A literal newline, not $'\n': that is a bashism, and a POSIX sh
+# would set IFS to the four characters $ ' \ n and split on each.
+IFS='
+'
 for output in $(xrandr | sed -nE "s/(^\S+) connected.*$/\1/p"); do
-    echo "exec_always xrandr --output \"$output\" --rotate inverted" >> "$conf"
+    line="exec_always xrandr --output \"$output\" --rotate inverted $tag"
+    grep -qF -- "$line" "$conf" || echo "$line" >> "$conf"
 done
 i3-msg restart

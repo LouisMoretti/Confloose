@@ -20,7 +20,10 @@ export CONFLOOSE_BASE
 # With `curl | bash`, stdin is taken by the piped script, so menu answers are read
 # straight from the terminal. With no terminal, fall back to stdin (this also lets
 # tests pipe the choices in).
-if [ -r /dev/tty ]; then TTY=/dev/tty; else TTY=/dev/stdin; fi
+# We *open* /dev/tty rather than test -r it: the device node is mode 0666, so
+# `[ -r /dev/tty ]` succeeds even for a process with no controlling terminal
+# (cron, CI, docker run without -t) and the fallback would never trigger.
+if { : < /dev/tty; } 2>/dev/null; then TTY=/dev/tty; else TTY=/dev/stdin; fi
 
 # Track active confloose (uses the EPITA fleet AFS home when present).
 CONF_DIR="${AFS_DIR:-$HOME}/.confloose"
@@ -32,7 +35,9 @@ else
     c_red=''; c_grn=''; c_ylw=''; c_bold=''; c_off=''
 fi
 
-fetch() { curl -fsSL "$1"; }
+# --max-time keeps a black-holed network from hanging the installer (and, in
+# the menu loop, every subsequent prompt) forever.
+fetch() { curl -fsSL --connect-timeout 10 --max-time 60 "$1"; }
 
 lock_add() {
     mkdir -p "$CONF_DIR"; touch "$LOCK"
@@ -43,33 +48,46 @@ lock_del() {
     grep -vxF -- "$1" "$LOCK" > "$LOCK.tmp" 2>/dev/null || : > "$LOCK.tmp"
     mv "$LOCK.tmp" "$LOCK"
 }
+lock_has() {
+    [ -f "$LOCK" ] && grep -qxF -- "$1" "$LOCK" 2>/dev/null
+}
 lock_list() {
     if [ -s "$LOCK" ]; then cat "$LOCK"; else echo "(no confloose installed)"; fi
 }
 
-# We check the download (curl -f fails on a 404), then run it. The script's own exit
-# code is ignored on purpose: d-002's confloose end with a best-effort
-# `source ~/.zshrc` that returns non-zero when the file is missing, which does not
-# mean the confloose failed.
+# We check the download (curl -f fails on a 404), then run it. The confloose scripts
+# source the rc files in a guarded subshell and end on `true`, so a non-zero exit
+# here is a real failure (missing binary, failed build, failed download, refused
+# conflict) and we must not record the confloose as installed.
 apply() {
-    local body
+    local body rc
     if ! body=$(fetch "$CONFLOOSE_BASE/confloose/$1/confloose.sh"); then
         printf '%s!! confloose not found: %s%s\n' "$c_red" "$1" "$c_off" >&2
         return 1
     fi
     printf '%s>> confloose %s%s\n' "$c_grn" "$1" "$c_off"
-    printf '%s\n' "$body" | sh || true
+    printf '%s\n' "$body" | sh
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+        printf '%s!! confloose %s failed (exit %d), not recorded%s\n' "$c_red" "$1" "$rc" "$c_off" >&2
+        return 1
+    fi
     lock_add "$1"
 }
 
 antidote() {
-    local body
+    local body rc
     if ! body=$(fetch "$CONFLOOSE_BASE/confloose/$1/antidote.sh"); then
         printf '%s!! antidote not found: %s%s\n' "$c_red" "$1" "$c_off" >&2
         return 1
     fi
     printf '%s<< antidote %s%s\n' "$c_ylw" "$1" "$c_off"
-    printf '%s\n' "$body" | sh || true
+    printf '%s\n' "$body" | sh
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+        printf '%s!! antidote %s failed (exit %d), still recorded%s\n' "$c_red" "$1" "$rc" "$c_off" >&2
+        return 1
+    fi
     lock_del "$1"
 }
 
@@ -105,9 +123,13 @@ print_menu() {
 resolve() {
     local tok idx out=()
     for tok in "$@"; do
-        if printf '%s' "$tok" | grep -qE '^[0-9]+$'; then
+        if printf '%s' "$tok" | grep -qE '^[0-9]{1,4}$'; then
             idx=$((10#$tok - 1))
-            if [ "$idx" -ge 0 ] && [ "$idx" -lt "${#NAMES[@]}" ]; then out+=("${NAMES[$idx]}"); fi
+            if [ "$idx" -ge 0 ] && [ "$idx" -lt "${#NAMES[@]}" ]; then
+                out+=("${NAMES[$idx]}")
+            else
+                printf '%sout of range (1-%d): %s%s\n' "$c_red" "${#NAMES[@]}" "$tok" "$c_off" >&2
+            fi
         elif valid_name "$tok"; then
             out+=("$tok")
         else
@@ -142,7 +164,11 @@ main() {
         case "$1" in
             -a|--antidote) shift; load_manifest
                for n in "$@"; do
-                   if valid_name "$n"; then antidote "$n"; else printf '%sunknown: %s%s\n' "$c_red" "$n" "$c_off" >&2; fi
+                   if valid_name "$n" || lock_has "$n"; then
+                       antidote "$n"
+                   else
+                       printf '%sunknown: %s%s\n' "$c_red" "$n" "$c_off" >&2
+                   fi
                done;;
             -l|--list)     lock_list;;
             -h|--help)     load_manifest; print_menu;;

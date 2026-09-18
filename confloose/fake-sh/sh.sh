@@ -2,9 +2,9 @@
 
 trap 'printf "\n%s" "$ps1"' INT
 
-ps1="$(sed -n "s/^\s*PS1=[\"']*\(.*\)[\"']\s*$/\1/p" "$HOME/.bashrc")"
+ps1="$(sed -n "s/^\s*PS1=[\"']*\(.*\)[\"']\s*$/\1/p" "$HOME/.bashrc" 2>/dev/null)"
 if [ -z "$ps1" ]; then
-    ps1="\Ww\$ "
+    ps1="\w\$ "
 fi
 
 if [ "$(pwd)" = "$HOME" ]; then
@@ -14,7 +14,10 @@ else
 fi
 
 ps1="$(echo "$ps1" | sed -E "s/[\][$]/$/g")"
-ps1="$(echo "$ps1" | sed -E "s/[\][wW](\W)/$here\1/g")"
+# Escape the directory name before it becomes a sed replacement: a bare & means
+# "the whole match", and a trailing \ swallows the delimiter.
+here_esc=$(printf '%s' "$here" | sed -e 's/[&\\/]/\\&/g')
+ps1="$(echo "$ps1" | sed -E "s/[\][wW](\W)/$here_esc\1/g")"
 
 while true; do
     printf '%s' "$ps1"

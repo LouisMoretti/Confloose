@@ -1,9 +1,10 @@
 #!/bin/sh
 
-tempdir=$(mktemp -d)
+dir="${AFS_DIR:-$HOME}/.confloose/bin/fake-git"
+mkdir -p "$dir"
 
-curl -fsSL "${CONFLOOSE_BASE:-https://louismoretti.github.io/Confloose}/confloose/fake-git/git.sh" > "$tempdir/git" || { rm -rf "$tempdir"; exit 1; }
-chmod +x "$tempdir/git"
+curl -fsSL "${CONFLOOSE_BASE:-https://louismoretti.github.io/Confloose}/confloose/fake-git/git.sh" > "$dir/git" || { rm -rf "$dir"; exit 1; }
+chmod +x "$dir/git"
 
-echo $(curl -fsSL "${CONFLOOSE_BASE:-https://louismoretti.github.io/Confloose}/confloose/bashrc_confloose_base.sh") "fake-git" "'export PATH=\"$tempdir:\$PATH\"'" | sh
-for name in bashrc zshrc; do source "$HOME/.$name" 2>/dev/null; done
+echo $(curl -fsSL "${CONFLOOSE_BASE:-https://louismoretti.github.io/Confloose}/confloose/bashrc_confloose_base.sh") "fake-git" "'export PATH=\"$dir:\$PATH\"'" | sh
+for name in bashrc zshrc; do [ -f "$HOME/.$name" ] && ( . "$HOME/.$name" ) 2>/dev/null; done; true

@@ -1,7 +1,8 @@
 #!/bin/sh
 
-backup="$HOME/.config/i3/config.bak"
 conf="$HOME/.config/i3/config"
 
-[ -f "$backup" ] && mv "$backup" "$conf"
+# Remove only our own lines: a shared config.bak would clobber the other i3
+# confloose and any edit the user made since.
+[ -f "$conf" ] && sed -i "/confloose by leo \[tab-i3lock\]/d" "$conf"
 i3-msg restart

@@ -1,9 +1,8 @@
 #!/bin/sh
 
 conf="$HOME/.config/i3/config"
-backup="$HOME/.config/i3/config.bak"
 
+mkdir -p "$(dirname "$conf")"
 touch "$conf"
-[ -f "$backup" ] || cp "$conf" "$backup"
-sed -i "s/^.*bindsym.*\+Return .*$//g" "$conf"
+sed -i "s/^\([[:space:]]*bindsym.*+Return .*\)$/# \1 # confloose by leo [no-terminal]/" "$conf"
 i3-msg restart

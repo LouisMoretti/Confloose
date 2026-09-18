@@ -58,7 +58,15 @@ Keep `-fsSL`: the `-L` follows the redirect (see Deployment).
   ```
 
 - The confloose target the fleet environment (i3wm, X11, bash) and assume, like
-  d-002, that `/bin/sh` accepts `function` and `source` (sh = bash).
+  d-002, that `/bin/sh` accepts the `function` keyword (sh = bash). They no
+  longer use `source`: in POSIX mode a `.` on a missing file aborts the shell, so
+  each rc file is sourced in a subshell guarded by `[ -f ]`.
+- Reversibility is per-confloose, never a whole-file snapshot shared between
+  them. The i3 confloose either tag the lines they add/comment with
+  `# confloose by leo [<name>]` and delete exactly those, or apply a transform
+  that is its own inverse; only the binaries keep a `<file>.confloose.bak`. This
+  is what keeps one antidote from reverting another confloose -- or the user's
+  own edits.
 
 ## Adding a confloose
 
