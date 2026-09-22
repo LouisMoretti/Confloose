@@ -23,3 +23,4 @@ fake-i3lock	Fake i3lock screen locker
 daemon-terminal	Background daemon that randomly opens apps
 i3loop	Background daemon that keeps relaunching i3lock
 alacritty-color	Replace the Alacritty colors
+tchiki	Pop two faces often, random size/colours, and loop tchiki.mp3 (vol >=75%)
