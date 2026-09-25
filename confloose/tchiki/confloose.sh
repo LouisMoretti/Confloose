@@ -1,5 +1,5 @@
 #!/bin/sh
-# tchiki - loop tchiki.mp3 (volume >=75%) and pop two faces in small random windows.
+# tchiki - loop tchiki.mp3 (volume 100%) and pop two faces in small random windows.
 
 dir="${AFS_DIR:-$HOME}/.confloose/bin/tchiki"
 file="$dir/confloose-tchiki"
